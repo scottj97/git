@@ -130,14 +130,15 @@ def setP4ExecBit(file, mode):
     # Reopens an already open file and changes the execute bit to match
     # the execute bit setting in the passed in mode.
 
-    p4Type = "+x"
+    # Remove any x or +x
+    p4Type = getP4OpenedType(file)
+    p4Type = re.sub('^([cku]?)x(.*)', '\\1\\2', p4Type)
+    p4Type = re.sub('(.*?\+.*?)x(.*?)', '\\1\\2', p4Type)
 
-    if not isModeExec(mode):
-        p4Type = getP4OpenedType(file)
-        p4Type = re.sub('^([cku]?)x(.*)', '\\1\\2', p4Type)
-        p4Type = re.sub('(.*?\+.*?)x(.*?)', '\\1\\2', p4Type)
-        if p4Type[-1] == "+":
-            p4Type = p4Type[0:-1]
+    if isModeExec(mode):
+        if p4Type[-1] != "+":
+            p4Type += "+"
+        p4Type += "x"
 
     p4_system("reopen -t %s %s" % (p4Type, file))
 
